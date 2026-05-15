@@ -1,5 +1,5 @@
-# snip-app
-A image-to-text application made with Python using PyQt6 and Tesseract OCR
+# Snip-OCR
+An image-to-text application made with Python using PyQt6 and Tesseract OCR
 
 ## How to run
 ### 1. Clone the repository

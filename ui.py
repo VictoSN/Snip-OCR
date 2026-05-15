@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QComboBox
 )
 from PyQt6.QtCore import QUrl, Qt, QTimer
-from PyQt6.QtGui import QIntValidator, QPixmap
+from PyQt6.QtGui import QIntValidator, QPixmap, QGuiApplication
 from PyQt6.QtMultimedia import QSoundEffect
 
 from snipping import Snipping
@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
 
     def setup_ui(self):
         self.resize(650, 500)
-        self.setWindowTitle("Snipping OCR")
+        self.setWindowTitle("Snip-OCR")
         
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -239,13 +239,41 @@ class MainWindow(QMainWindow):
             5000
         )
 
+    def validate_coordinates(self):
+        valid = True
+
+        if not self.x_coords.text().strip():
+            self.x_coords.setStyleSheet("border: 2px solid red;")
+            valid = False
+        else:
+            self.x_coords.setStyleSheet("")
+
+        if not self.y_coords.text().strip():
+            self.y_coords.setStyleSheet("border: 2px solid red;")
+            valid = False
+        else:
+            self.y_coords.setStyleSheet("")
+
+        if not self.width_dimension.text().strip():
+            self.width_dimension.setStyleSheet("border: 2px solid red;")
+            valid = False
+        else:
+            self.width_dimension.setStyleSheet("")
+
+        if not self.height_dimension.text().strip():
+            self.height_dimension.setStyleSheet("border: 2px solid red;")
+            valid = False
+        else:
+            self.height_dimension.setStyleSheet("")
+
+        return valid
+
     def snip_screen(self):
-        self.showMinimized() # Hide the program to get the text
         if self.input_option == "Mouse Select":
-            QTimer.singleShot(100, lambda: self.create_overlay())
-        elif self.input_option == "Coordinates":
+            QTimer.singleShot(500, lambda: self.create_overlay())
+        elif self.input_option == "Coordinates" and self.validate_coordinates():
             # Capture current coordinate inputs, Empty values trigger fullscreen capture
-            QTimer.singleShot(100, lambda: self.take_screenshot(
+            QTimer.singleShot(500, lambda: self.take_screenshot(
                     self.x_coords.text(), 
                     self.y_coords.text(), 
                     self.width_dimension.text(), 
@@ -253,17 +281,24 @@ class MainWindow(QMainWindow):
                 )
             )
         elif self.input_option == "Full Window":
-            QTimer.singleShot(100, lambda: self.take_screenshot())
+            QTimer.singleShot(500, lambda: self.take_screenshot())
 
     def create_overlay(self):
-        self.overlay = SnipOverlay(self.take_screenshot)
+        self.overlay = SnipOverlay(
+            self.take_screenshot,
+            self.showNormal
+        )
 
     def take_screenshot(self, x='', y='', w='', h=''):
+        self.showMinimized() # Hide the program to get the text
         self.sound.play()
         self.show_notifications("Screenshot Taken!")
+
         self.snipping.screenshot(x, y, w, h)
+        
         self.update_snips()
-        self.showNormal()
+        self.select_snip(len(self.snips) - 1) # Open newly taken image
+        self.showNormal() # Show the program back
 
     # UI Visibility
     def set_layout_visible(self, layout, visible):

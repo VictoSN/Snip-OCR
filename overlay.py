@@ -1,26 +1,26 @@
-from PyQt6.QtWidgets import QWidget, QApplication
+from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import Qt, QRect
 from PyQt6.QtGui import QPainter, QColor, QPixmap
 import mss, mss.tools
 import tempfile, os
 
 class SnipOverlay(QWidget):
-    def __init__(self, callback):
+    def __init__(self, callback, cancel_callback):
         super().__init__()
         self.callback = callback
+        self.cancel_callback = cancel_callback
         self.start = None
         self.end = None
         self.background = self._grab_screen()
 
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.Tool
+            Qt.WindowType.WindowStaysOnTopHint 
         )
         self.setWindowState(Qt.WindowState.WindowFullScreen)
         self.setCursor(Qt.CursorShape.CrossCursor)
         self.show()
-        QApplication.instance().installEventFilter(self)
+        self.activateWindow()
 
     def _grab_screen(self):
         with mss.mss() as sct:
@@ -63,10 +63,7 @@ class SnipOverlay(QWidget):
         self.callback(min(x1, x2), min(y1, y2), abs(x1 - x2), abs(y1 - y2))
         self.close()
 
-    def eventFilter(self, obj, event):
-        from PyQt6.QtCore import QEvent
-        if event.type() == QEvent.Type.KeyPress:
-            if event.key() == Qt.Key.Key_Escape:
-                self.close()
-                return True
-        return False
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.close()
+            self.cancel_callback()

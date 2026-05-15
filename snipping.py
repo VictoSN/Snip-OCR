@@ -25,8 +25,9 @@ class Snipping:
         ## 3. Thresholds
         pil_img = pil_img.point(lambda p: 255 if p > 160 else 0)
 
-        print("OCR Done")
+        print("Image Preprocessing Done")
         config = "--psm 6"
+        print("OCR Started")
         return pytesseract.image_to_string(pil_img, config=config)
 
     def screenshot(self, x='', y='', w='', h=''):
@@ -53,6 +54,7 @@ class Snipping:
             name = "Image_" + now.strftime('%y%m%d_%H%M%S.%f')[:-3]
             date = now.strftime('%Y%m%d_%H%M%S.%f')[:-3]
             ocr_text = self.ocr(img) # Convert image into text
+            print("OCR Done")
             output = str(self.screenshots_folder / f"{name}.png")
 
             mss.tools.to_png(img.rgb, img.size, output=output)
