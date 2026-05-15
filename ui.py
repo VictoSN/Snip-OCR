@@ -24,14 +24,16 @@ class MainWindow(QMainWindow):
         self.snips = self.storage.get_snips()
         self.selected_idx = None
         self.input_option = "Mouse Select" # Save the user option
+        self.monitors = len(QGuiApplication.screens()) # Save amount of screens
 
         self.setup_notification()
         self.setup_sound_effects()
         self.setup_ui()
+        self.setup_monitor()
         self.setup_connections()
         self.render_snips()
         self.set_layout_visible(self.viewer_layout, False)
-        self.set_layout_visible(self.coords_layout, False)
+        self.set_user_option()
 
     def setup_notification(self):
         self.tray = QSystemTrayIcon(self)
@@ -105,13 +107,19 @@ class MainWindow(QMainWindow):
         self.control_layout = QVBoxLayout()
         main_layout.addLayout(self.control_layout)
 
-        # Dropdown
+        # Control Option Layout
         self.control_option_layout = QHBoxLayout()
         self.control_layout.addLayout(self.control_option_layout)
-
+    
+        # Control Dropdown
         self.snip_dropdown = QComboBox()
         self.snip_dropdown.addItems(["Mouse Select", "Coordinates", "Full Window"])
         self.control_option_layout.addWidget(self.snip_dropdown)
+
+        # Monitor Dropdown
+        self.monitor_dropdown = QComboBox()
+        self.monitor_dropdown.addItem("Monitor 1", 1)
+        self.control_option_layout.addWidget(self.monitor_dropdown)
 
         # Coords Layout
         self.coords_layout = QHBoxLayout()
@@ -142,6 +150,14 @@ class MainWindow(QMainWindow):
         self.snip_button.setStyleSheet("QPushButton {font-size: 28px; font-weight: bold;}")
         self.control_layout.addWidget(self.snip_button)
     
+    def setup_monitor(self):
+        if self.monitors > 1:
+            for i in range(1, self.monitors + 1):
+                if i == 1:
+                    continue
+                self.monitor_dropdown.addItem(f"Monitor {i}", i)
+            self.monitor_dropdown.addItem(f"All Monitor", 0)
+
     def setup_connections(self):
         self.snip_button.clicked.connect(self.snip_screen)
         self.snip_name.editingFinished.connect(self.update_snip_name)
@@ -294,7 +310,9 @@ class MainWindow(QMainWindow):
         self.sound.play()
         self.show_notifications("Screenshot Taken!")
 
-        self.snipping.screenshot(x, y, w, h)
+        monitor_index = self.monitor_dropdown.currentData()
+        print(monitor_index)
+        self.snipping.screenshot(x, y, w, h, monitor_index)
         
         self.update_snips()
         self.select_snip(len(self.snips) - 1) # Open newly taken image
@@ -326,6 +344,11 @@ class MainWindow(QMainWindow):
             self.set_layout_visible(self.coords_layout, False)
         elif self.input_option == "Coordinates":
             self.set_layout_visible(self.coords_layout, True)
+
+        if self.input_option == "Mouse Select":
+            self.monitor_dropdown.hide()
+        elif self.input_option == "Coordinates" or self.input_option == "Full Window":
+            self.monitor_dropdown.show()
 
     # Close Database
     def closeEvent(self, event):

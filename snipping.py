@@ -1,8 +1,6 @@
 import pytesseract
 import mss, mss.tools
-from PIL import (
-    Image, ImageOps
-)
+from PIL import Image
 from storage import Storage
 from pathlib import Path
 from datetime import datetime
@@ -30,21 +28,21 @@ class Snipping:
         print("OCR Started")
         return pytesseract.image_to_string(pil_img, config=config)
 
-    def screenshot(self, x='', y='', w='', h=''):
+    def screenshot(self, x='', y='', w='', h='', monitor_index=1):
         self.screenshots_folder.mkdir(exist_ok=True)
 
         with mss.mss() as sct:
+            monitor = sct.monitors[monitor_index]
             if not all([x, y, w, h]):
                 # 0 = All monitors
                 # 1 = Main Monitor
                 # 2 = Secondary Monitor and etc..
-                monitor = sct.monitors[1]
                 img = sct.grab(monitor)
             else:
                 x = int(x); y = int(y); w = int(w); h = int(h)
                 region = {
-                    "left": x,
-                    "top": y,
+                    "left": monitor["left"] + x,
+                    "top": monitor["top"] + y,
                     "width": w,
                     "height": h
                 }
