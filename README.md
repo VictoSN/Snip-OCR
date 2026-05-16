@@ -1,57 +1,57 @@
 # Snip-OCR
-An image-to-text application made with Python using PyQt6 and Tesseract OCR
+A Python desktop application made with PyQt6 for capturing screenshots and extracting text using OCR with snipping tool like functionalities.
 
-## How to run
-### 1. Clone the repository
+## Features
+1. Full screen or region capture
+2. Interactive snipping overlay with drag-to-select
+3. OCR text extraction via pytesseract
+4. Persistent storage in SQLite
+5. Multi-monitor support (Excluding drag-to-select)
+
+## How it works
+- Overlay captures a frozen screenshot of all monitors as background
+- Drag to select a region, which is then captured and saved
+- pytesseract extracts text from the captured image with preprocessing
+- Snip's details are stored in database
+
+## Screenshots
+### Default Interface
+![Default](/images/Default.png)
+
+### Drag-to-Select
+![Drag-to-Select](/images/Drag-to-Select.png)
+
+### Coordinates
+![Coordinates](/images/Coordinates.png)
+
+### Full-Window
+![Full-Window](/images/Full-Window.png)
+
+### Multiple Snips
+![Multiple Snips](/images/Multiple.png)
+
+### View
+![View](/images/View.png)
+
+## How to run (Windows Only)
+1. Clone the repo
+2. Create a virtual environment:
 ```bash
-git clone <your-repo-url>
-cd alarm-app
-```
-
----
-
-# Windows (PowerShell)
-
-### 2. Create a virtual environment
-```powershell
 python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 ```
-
-### 3. Activate the virtual environment
-```powershell
-.\venv\Scripts\Activate
-```
-
-### 4. Install dependencies
-```powershell
-pip install PyQt6 mss pytesseract Pillow pynput
-```
-
-### 5. Run the application
-```powershell
-python main.py
-```
-
----
-
-# Linux / macOS
-
-### 2. Create a virtual environment
+3. Install dependencies:
 ```bash
-python3 -m venv venv
+pip install PyQt6 pytesseract Pillow mss
 ```
-
-### 3. Activate the virtual environment
+4. Install Tesseract:
 ```bash
-source venv/bin/activate
-```
+# Debian/Ubuntu
+sudo apt install tesseract-ocr
 
-### 4. Install dependencies
-```bash
-pip install PyQt6 mss pytesseract Pillow pynput
+# Windows: download installer from https://github.com/tesseract-ocr/tesseract
 ```
-
-### 5. Run the application
+5. Run:
 ```bash
 python main.py
 ```

@@ -16,16 +16,9 @@ class Snipping:
         # Image Processing
         ## 1. Convert to grayscale
         pil_img = pil_img.convert("L") 
-
         ## 2. Upscale
         pil_img = pil_img.resize((pil_img.width * 2, pil_img.height *2))
-
-        ## 3. Thresholds
-        pil_img = pil_img.point(lambda p: 255 if p > 160 else 0)
-
-        print("Image Preprocessing Done")
-        config = "--psm 6"
-        print("OCR Started")
+        config = "--psm 6 --oem 3"
         return pytesseract.image_to_string(pil_img, config=config)
 
     def screenshot(self, x='', y='', w='', h='', monitor_index=1):
@@ -57,3 +50,4 @@ class Snipping:
 
             mss.tools.to_png(img.rgb, img.size, output=output)
             self.storage.add_snip(name, ocr_text, x, y, w, h, date, f"{self.screenshots_folder}/{name}.png")
+            return name

@@ -24,11 +24,11 @@ class MainWindow(QMainWindow):
         self.snips = self.storage.get_snips()
         self.selected_idx = None
         self.input_option = "Mouse Select" # Save the user option
-        self.monitors = len(QGuiApplication.screens()) # Save amount of screens
 
         self.setup_notification()
         self.setup_sound_effects()
         self.setup_ui()
+        self.setup_style()
         self.setup_monitor()
         self.setup_connections()
         self.render_snips()
@@ -118,7 +118,6 @@ class MainWindow(QMainWindow):
 
         # Monitor Dropdown
         self.monitor_dropdown = QComboBox()
-        self.monitor_dropdown.addItem("Monitor 1", 1)
         self.control_option_layout.addWidget(self.monitor_dropdown)
 
         # Coords Layout
@@ -150,21 +149,23 @@ class MainWindow(QMainWindow):
         self.snip_button.setStyleSheet("QPushButton {font-size: 28px; font-weight: bold;}")
         self.control_layout.addWidget(self.snip_button)
     
+    def setup_style(self):
+        pass
+
     def setup_monitor(self):
-        if self.monitors > 1:
-            for i in range(1, self.monitors + 1):
-                if i == 1:
-                    continue
-                self.monitor_dropdown.addItem(f"Monitor {i}", i)
-            self.monitor_dropdown.addItem(f"All Monitor", 0)
+        self.monitor_dropdown.addItem(f"All Monitor", 0)
+        for i in range(1, len(QGuiApplication.screens()) + 1):
+            self.monitor_dropdown.addItem(f"Monitor {i}", i)
 
     def setup_connections(self):
+        self.snip_dropdown.currentTextChanged.connect(self.set_user_option)
         self.snip_button.clicked.connect(self.snip_screen)
+        # Trying out activateWindow instead of showNormal, more effective?
+        self.tray.messageClicked.connect(self.activateWindow)
         self.snip_name.editingFinished.connect(self.update_snip_name)
         self.back_button.clicked.connect(self.back_snip)
         self.delete_button.clicked.connect(self.delete_snip)
         self.copy_button.clicked.connect(self.copy_snip)
-        self.snip_dropdown.currentTextChanged.connect(self.set_user_option)
     
     # View Logic
     def clear_render(self, layout):
@@ -243,6 +244,8 @@ class MainWindow(QMainWindow):
         self.update_snips()
 
     def copy_snip(self):
+        self.copy_button.setText("Copied")
+        QTimer.singleShot(1000, lambda: self.copy_button.setText("Copy"))
         clipboard = QApplication.clipboard()
         clipboard.setText(self.snip[2])
 
@@ -256,40 +259,35 @@ class MainWindow(QMainWindow):
         )
 
     def validate_coordinates(self):
+        fields = [self.x_coords, self.y_coords, self.width_dimension, self.height_dimension]
         valid = True
 
-        if not self.x_coords.text().strip():
-            self.x_coords.setStyleSheet("border: 2px solid red;")
-            valid = False
-        else:
-            self.x_coords.setStyleSheet("")
+        for field in fields:
+            # Restore the border automatically
+            field.textChanged.connect(
+                lambda _, f=field: f.setStyleSheet("")
+            )
 
-        if not self.y_coords.text().strip():
-            self.y_coords.setStyleSheet("border: 2px solid red;")
-            valid = False
-        else:
-            self.y_coords.setStyleSheet("")
-
-        if not self.width_dimension.text().strip():
-            self.width_dimension.setStyleSheet("border: 2px solid red;")
-            valid = False
-        else:
-            self.width_dimension.setStyleSheet("")
-
-        if not self.height_dimension.text().strip():
-            self.height_dimension.setStyleSheet("border: 2px solid red;")
-            valid = False
-        else:
-            self.height_dimension.setStyleSheet("")
+            if not field.text().strip():
+                field.setStyleSheet("border: 2px solid red;")
+                valid = False
+            else:
+                field.setStyleSheet("")
 
         return valid
 
     def snip_screen(self):
+        if self.input_option == "Coordinates" and not self.validate_coordinates():
+            return
+        
+        # Hide the program to get the text
+        self.showMinimized()
+
         if self.input_option == "Mouse Select":
-            QTimer.singleShot(500, lambda: self.create_overlay())
+            QTimer.singleShot(200, self.create_overlay)
         elif self.input_option == "Coordinates" and self.validate_coordinates():
             # Capture current coordinate inputs, Empty values trigger fullscreen capture
-            QTimer.singleShot(500, lambda: self.take_screenshot(
+            QTimer.singleShot(200, lambda: self.take_screenshot(
                     self.x_coords.text(), 
                     self.y_coords.text(), 
                     self.width_dimension.text(), 
@@ -297,22 +295,20 @@ class MainWindow(QMainWindow):
                 )
             )
         elif self.input_option == "Full Window":
-            QTimer.singleShot(500, lambda: self.take_screenshot())
+            QTimer.singleShot(200, self.take_screenshot)
 
     def create_overlay(self):
+        self.monitor_dropdown.setCurrentIndex(1)
         self.overlay = SnipOverlay(
             self.take_screenshot,
             self.showNormal
         )
 
     def take_screenshot(self, x='', y='', w='', h=''):
-        self.showMinimized() # Hide the program to get the text
         self.sound.play()
-        self.show_notifications("Screenshot Taken!")
 
-        monitor_index = self.monitor_dropdown.currentData()
-        print(monitor_index)
-        self.snipping.screenshot(x, y, w, h, monitor_index)
+        name = self.snipping.screenshot(x, y, w, h, self.monitor_dropdown.currentData())
+        self.show_notifications("Screenshot Taken!", name)
         
         self.update_snips()
         self.select_snip(len(self.snips) - 1) # Open newly taken image
