@@ -38,7 +38,7 @@ A Python desktop application made with PyQt6 for capturing screenshots and extra
 2. Create a virtual environment:
 ```bash
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+venv\Scripts\activate
 ```
 3. Install dependencies:
 ```bash
@@ -46,10 +46,7 @@ pip install PyQt6 pytesseract Pillow mss
 ```
 4. Install Tesseract:
 ```bash
-# Debian/Ubuntu
-sudo apt install tesseract-ocr
-
-# Windows: download installer from https://github.com/tesseract-ocr/tesseract
+download installer from https://github.com/tesseract-ocr/tesseract
 ```
 5. Run:
 ```bash
